@@ -10,18 +10,18 @@ const Post = require('../models/Post');
 const uploadDir = path.join(__dirname, '../public/uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Set up multer for file upload
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
-// ✅ Dashboard with category filtering
+// Dashboard with filtering
 router.get('/dashboard', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
 
-  const selectedCategory = req.query.category || '';
+  const selectedCategory = req.query.category || 'All';
 
   const query = `
     SELECT posts.*, profiles.photo 
@@ -34,9 +34,9 @@ router.get('/dashboard', (req, res) => {
     if (err) return res.send('Database error.');
 
     const categories = [...new Set(allPosts.map(post => post.category).filter(Boolean))];
-    const posts = selectedCategory
-      ? allPosts.filter(post => post.category === selectedCategory)
-      : allPosts;
+    const posts = selectedCategory === 'All'
+      ? allPosts
+      : allPosts.filter(post => post.category === selectedCategory);
 
     res.render('dashboard', {
       user: req.session.user,
@@ -47,7 +47,7 @@ router.get('/dashboard', (req, res) => {
   });
 });
 
-// ✅ Create new post with optional image and return JSON for AJAX
+// Create post
 router.post('/create', upload.single('image'), async (req, res) => {
   try {
     const { title, content, category = 'General' } = req.body;
@@ -72,13 +72,13 @@ router.post('/create', upload.single('image'), async (req, res) => {
   }
 });
 
-// ✅ Delete post
+// Delete
 router.post('/delete/:id', async (req, res) => {
   await Post.delete(req.params.id);
   res.redirect('/blog/dashboard');
 });
 
-// ✅ Edit post (form) — only if author matches session user
+// Edit view
 router.get('/edit/:id', async (req, res) => {
   const post = await Post.getById(req.params.id);
   if (!post) return res.redirect('/blog/dashboard');
@@ -90,7 +90,7 @@ router.get('/edit/:id', async (req, res) => {
   res.render('edit', { post });
 });
 
-// ✅ Save edit — only if author matches session user
+// Edit save
 router.post('/edit/:id', async (req, res) => {
   const post = await Post.getById(req.params.id);
   if (!post || post.author !== req.session.user.username) {

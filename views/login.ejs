@@ -4,65 +4,66 @@
   <title>Login</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    .form-box {
-      background: #f0f8ff;
+    .login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: #e8f0fe;
       padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      margin: 100px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-container h2 {
       text-align: center;
+      color: #1a73e8;
     }
 
-    input[type="text"], input[type="password"] {
+    .login-container input {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 12px;
       border: 1px solid #ccc;
+      border-radius: 4px;
     }
 
-    button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 5px;
-      background: #007bff;
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .button-row button {
+      flex: 1;
+      padding: 10px;
+      background-color: #1a73e8;
       color: white;
+      border: none;
+      border-radius: 4px;
       cursor: pointer;
-      margin: 5px;
     }
 
-    button:hover {
-      background: #0056b3;
+    .button-row button:hover {
+      background-color: #155ab6;
     }
 
-    .toggle-btn {
-      background: #6c757d;
-    }
-
-    .toggle-btn:hover {
-      background: #495057;
-    }
-
-    a {
+    .login-container a {
       display: block;
-      margin-top: 15px;
-      color: #007bff;
+      text-align: center;
+      margin-top: 10px;
+      color: #1a73e8;
+      font-weight: bold;
       text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="form-box">
+  <div class="login-container">
     <h2>Login</h2>
     <form action="/login" method="POST">
       <input type="text" name="username" placeholder="Username" required />
-      <input type="password" name="password" id="password" placeholder="Password" required />
-      <div>
-        <button type="button" class="toggle-btn" onclick="togglePassword()">Show</button>
+      <input type="password" id="password" name="password" placeholder="Password" required />
+      <div class="button-row">
+        <button type="button" onclick="togglePassword()">Show</button>
         <button type="submit">Login</button>
       </div>
     </form>
@@ -71,15 +72,8 @@
 
   <script>
     function togglePassword() {
-      const passwordField = document.getElementById('password');
-      const toggleBtn = document.querySelector('.toggle-btn');
-      if (passwordField.type === 'password') {
-        passwordField.type = 'text';
-        toggleBtn.textContent = 'Hide';
-      } else {
-        passwordField.type = 'password';
-        toggleBtn.textContent = 'Show';
-      }
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
     }
   </script>
 </body>

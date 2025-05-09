@@ -12,6 +12,10 @@ const rateLimit = require('express-rate-limit');
 dotenv.config();
 const app = express();
 
+// ✅ Add these right after app is initialized
+app.set('trust proxy', 1);        // Render uses proxies, this prevents rate-limit crash
+app.set('view engine', 'ejs');    // Enables res.render() to load .ejs views
+
 // ✅ Rate limiter for all requests
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -20,6 +24,7 @@ const globalLimiter = rateLimit({
   legacyHeaders: false
 });
 app.use(globalLimiter);
+
 
 // ✅ Rate limiter for login
 const loginLimiter = rateLimit({

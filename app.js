@@ -15,6 +15,7 @@ const app = express();
 // ✅ Add these right after app is initialized
 app.set('trust proxy', 1);        // Render uses proxies, this prevents rate-limit crash
 app.set('view engine', 'ejs');    // Enables res.render() to load .ejs views
+app.set('views', path.join(__dirname, 'views')); // ✅ Explicitly set views folder
 
 // ✅ Rate limiter for all requests
 const globalLimiter = rateLimit({
@@ -24,7 +25,6 @@ const globalLimiter = rateLimit({
   legacyHeaders: false
 });
 app.use(globalLimiter);
-
 
 // ✅ Rate limiter for login
 const loginLimiter = rateLimit({

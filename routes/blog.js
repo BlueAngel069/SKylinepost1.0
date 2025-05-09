@@ -10,62 +10,58 @@ const Post = require('../models/Post');
 const uploadDir = path.join(__dirname, '../public/uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Set up multer for file upload
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
-// ✅ Dashboard with category filtering
+// ✅ Dashboard view
 router.get('/dashboard', (req, res) => {
   if (!req.session.user) return res.redirect('/login');
 
-  const selectedCategory = req.query.category && req.query.category.trim() !== '' ? req.query.category.trim() : '';
+  const selectedCategory = req.query.category && req.query.category.trim() !== '' && req.query.category !== 'All' 
+    ? req.query.category.trim() 
+    : null;
 
-  const query = `
-    SELECT posts.*, profiles.photo 
-    FROM posts 
-    LEFT JOIN profiles ON posts.author = profiles.username 
-    ORDER BY date DESC
-  `;
+  const query = `SELECT * FROM posts ORDER BY date DESC`;
 
   db.all(query, [], (err, allPosts) => {
     if (err) return res.send('Database error.');
 
-    // Clean and collect unique non-empty categories
-    const categories = [...new Set(allPosts
-      .map(post => post.category && post.category.trim())
-      .filter(Boolean))];
+    const cleanedPosts = allPosts.map(post => ({
+      ...post,
+      category: post.category ? post.category.trim() : 'General'
+    }));
 
-    // Filter posts based on cleaned selected category
-    const posts = selectedCategory
-      ? allPosts.filter(post => post.category && post.category.trim() === selectedCategory)
-      : allPosts;
+    const categories = [...new Set(cleanedPosts.map(p => p.category).filter(Boolean))];
+
+    const filteredPosts = selectedCategory
+      ? cleanedPosts.filter(post => post.category === selectedCategory)
+      : cleanedPosts;
 
     res.render('dashboard', {
       user: req.session.user,
-      posts,
+      posts: filteredPosts,
       categories,
-      selectedCategory
+      selectedCategory: selectedCategory || 'All'
     });
   });
 });
 
-// ✅ Create new post with optional image and return JSON for AJAX
+// ✅ Create new post
 router.post('/create', upload.single('image'), async (req, res) => {
   try {
     const { title, content } = req.body;
-    let category = req.body.category;
-
-    const author = req.session.user.username;
-    const date = new Date().toLocaleString();
+    let category = req.body.category?.trim();
     const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // Clean category
-    category = category && category.trim() !== '' ? category.trim() : null;
+    const finalCategory = category && category !== '' ? category : 'General';
+    const author = req.session.user.username;
+    const date = new Date().toLocaleString();
 
-    const result = await Post.create({ title, content, author, date, category, image });
+    const result = await Post.create({ title, content, author, date, category: finalCategory, image });
 
     res.json({
       id: result.id,
@@ -73,7 +69,7 @@ router.post('/create', upload.single('image'), async (req, res) => {
       content,
       author,
       date,
-      category,
+      category: finalCategory,
       image
     });
   } catch (err) {
@@ -82,31 +78,27 @@ router.post('/create', upload.single('image'), async (req, res) => {
   }
 });
 
-// ✅ Delete post
+// ✅ Delete
 router.post('/delete/:id', async (req, res) => {
   await Post.delete(req.params.id);
   res.redirect('/blog/dashboard');
 });
 
-// ✅ Edit post (form) — only if author matches session user
+// ✅ Edit (GET)
 router.get('/edit/:id', async (req, res) => {
   const post = await Post.getById(req.params.id);
-  if (!post) return res.redirect('/blog/dashboard');
-
-  if (post.author !== req.session.user.username) {
-    return res.status(403).send('You are not authorized to edit this post.');
+  if (!post || post.author !== req.session.user.username) {
+    return res.status(403).send('Unauthorized');
   }
-
   res.render('edit', { post });
 });
 
-// ✅ Save edit — only if author matches session user
+// ✅ Edit (POST)
 router.post('/edit/:id', async (req, res) => {
   const post = await Post.getById(req.params.id);
   if (!post || post.author !== req.session.user.username) {
-    return res.status(403).send('You are not allowed to edit this post.');
+    return res.status(403).send('Unauthorized');
   }
-
   const { title, content } = req.body;
   await Post.update({ id: req.params.id, title, content });
   res.redirect('/blog/dashboard');

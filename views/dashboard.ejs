@@ -13,20 +13,16 @@
   <h1>Welcome, <%= user.username %></h1>
 
   <% if (user.profilePic) { %>
-    <img src="/uploads/profiles/<%= user.profilePic %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+    <img src="/uploads/profiles/<%= user.profilePic %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%;">
   <% } else { %>
-    <img src="/uploads/profiles/default.jpg" alt="Default Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+    <img src="/uploads/profiles/default.jpg" alt="Default Profile Picture" style="width: 50px; height: 50px; border-radius: 50%;">
   <% } %>
 
   <form id="postForm" enctype="multipart/form-data">
-    <input type="text" name="title" placeholder="Post title" required />
-    <br>
-    <textarea name="content" placeholder="Write your post..." required></textarea>
-    <br>
-    <input type="text" name="category" placeholder="Category (optional)" />
-    <br>
-    <input type="file" name="image" accept="image/*" />
-    <br>
+    <input type="text" name="title" placeholder="Post title" required /><br>
+    <textarea name="content" placeholder="Write your post..." required></textarea><br>
+    <input type="text" name="category" placeholder="Category (optional)" /><br>
+    <input type="file" name="image" accept="image/*" /><br>
     <button type="submit">Create Post</button>
   </form>
 
@@ -44,7 +40,7 @@
     </select>
   </form>
 
-  <div class="post-container">
+  <div class="post-container" id="posts">
     <% (posts || []).forEach(post => { %>
       <div class="post">
         <h3><%= post.title %></h3>
@@ -82,7 +78,15 @@
 
       if (res.ok) {
         const newPost = await res.json();
-        const container = document.querySelector('.post-container');
+
+        const currentCategory = document.getElementById('category').value;
+        if (currentCategory && currentCategory !== 'All' && currentCategory !== newPost.category) {
+          alert('Post created, but it does not match the selected filter and will not display.');
+          form.reset();
+          return;
+        }
+
+        const container = document.getElementById('posts');
         const postDiv = document.createElement('div');
         postDiv.classList.add('post');
 
@@ -104,13 +108,11 @@
         `;
 
         container.prepend(postDiv);
-        document.getElementById('category').value = 'All';
         form.reset();
       } else {
         alert('Failed to post.');
       }
     });
   </script>
-
 </body>
 </html>

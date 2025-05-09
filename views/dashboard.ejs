@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="top-bar">
+    <a href="/logout">Logout</a>
+    <a href="/profile">Profile</a>
+  </div>
+
+  <h1>Welcome, <%= user.username %></h1>
+
+  <!-- Display Profile Picture -->
+  <% if (user.profilePic) { %>
+    <img src="/uploads/profiles/<%= user.profilePic %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+  <% } else { %>
+    <img src="/uploads/profiles/default.jpg" alt="Default Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+  <% } %>
+
+  <!-- Create Post Form -->
+  <form id="postForm" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Post title" required />
+    <br>
+    <textarea name="content" placeholder="Write your post..." required></textarea>
+    <br>
+    <input type="text" name="category" placeholder="Category (optional)" />
+    <br>
+    <input type="file" name="image" accept="image/*" />
+    <br>
+    <button type="submit">Create Post</button>
+  </form>
+
+  <hr>
+
+  <h2>Blog Posts</h2>
+
+  <!-- Filter by Category -->
+  <form method="GET" action="/blog/dashboard" style="margin-bottom: 1em;">
+    <label for="category">Filter by category:</label>
+    <select name="category" id="category" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      <% categories.forEach(cat => { %>
+        <option value="<%= cat %>" <%= cat === selectedCategory ? 'selected' : '' %>><%= cat %></option>
+      <% }) %>
+    </select>
+  </form>
+
+  <!-- Display Posts -->
+  <div class="post-container">
+    <% (posts || []).forEach(post => { %>
+      <div class="post">
+        <h3><%= post.title %></h3>
+        <p><%= post.content %></p>
+        <p><small>
+          By 
+          <a href="/profile/<%= post.author %>"><%= post.author %></a>
+        </small></p>
+        <p><small><%= post.date %></small></p>
+        <% if (post.category) { %>
+          <p><small>Category: <strong><%= post.category %></strong></small></p>
+        <% } %>
+
+        <div class="post-actions">
+          <form action="/blog/delete/<%= post.id %>" method="POST">
+            <button type="submit">Delete</button>
+          </form>
+          <form action="/blog/edit/<%= post.id %>" method="GET">
+            <button type="submit">Edit</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <script>
+    document.getElementById('postForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const res = await fetch('/blog/create', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res.ok) {
+        const newPost = await res.json();
+
+        const container = document.querySelector('.post-container');
+        const postDiv = document.createElement('div');
+        postDiv.classList.add('post');
+
+        postDiv.innerHTML = `
+          <h3>${newPost.title}</h3>
+          <p>${newPost.content}</p>
+          <p><small>By <a href="/profile/${newPost.author}">${newPost.author}</a></small></p>
+          <p><small>${newPost.date}</small></p>
+          ${newPost.category ? `<p><small>Category: <strong>${newPost.category}</strong></small></p>` : ''}
+          <div class="post-actions">
+            <form action="/blog/delete/${newPost.id}" method="POST">
+              <button type="submit">Delete</button>
+            </form>
+            <form action="/blog/edit/${newPost.id}" method="GET">
+              <button type="submit">Edit</button>
+            </form>
+          </div>
+        `;
+
+        container.prepend(postDiv);
+        form.reset();
+      } else {
+        alert('Failed to post.');
+      }
+    });
+  </script>
+
+</body>
+</html>

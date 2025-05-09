@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat with <%= otherUser %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>Chat with <%= otherUser %></h1>
+
+  <div class="chat-window" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 1em; margin-bottom: 1em;">
+    <% if (messages.length === 0) { %>
+      <p>No messages yet.</p>
+    <% } else { %>
+      <% messages.forEach(msg => { %>
+        <div style="margin-bottom: 1em;">
+          <strong><%= msg.sender === currentUser ? 'You' : msg.sender %>:</strong>
+          <span><%= msg.message %></span><br>
+          <small style="color: #777;"><%= msg.timestamp %></small>
+        </div>
+      <% }) %>
+    <% } %>
+  </div>
+
+  <form action="/chat/<%= otherUser %>" method="POST">
+    <textarea name="message" placeholder="Type your message..." required style="width: 100%; height: 60px;"></textarea>
+    <br>
+    <button type="submit">Send</button>
+  </form>
+
+  <br>
+  <a href="/chat">← Back to Chat List</a>
+
+  <!-- ✅ Enable AJAX chat send -->
+  <script src="/js/chat.js"></script>
+</body>
+</html>

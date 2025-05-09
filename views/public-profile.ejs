@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= username %>'s Public Profile</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1><%= username %>'s Profile</h1>
+
+  <% if (profile.photo) { %>
+    <img src="<%= profile.photo %>" alt="Profile Picture" style="max-width: 150px; border-radius: 50%;">
+  <% } else { %>
+    <img src="/uploads/profiles/default.jpg" alt="Default Profile Picture" style="max-width: 150px; border-radius: 50%;">
+  <% } %>
+
+  <p><strong>Bio:</strong> <%= profile.bio || 'This user has no bio yet.' %></p>
+
+  <h2>Posts by <%= username %>:</h2>
+  <% if (posts.length === 0) { %>
+    <p>No posts yet.</p>
+  <% } else { %>
+    <% posts.forEach(post => { %>
+      <div class="post">
+        <h3><%= post.title %></h3>
+        <p><%= post.content %></p>
+        <% if (post.category) { %>
+          <p><small>Category: <%= post.category %></small></p>
+        <% } %>
+        <p><small><%= post.date %></small></p>
+      </div>
+    <% }) %>
+  <% } %>
+
+  <br>
+  <a href="/blog/dashboard">← Back to Dashboard</a>
+</body>
+</html>

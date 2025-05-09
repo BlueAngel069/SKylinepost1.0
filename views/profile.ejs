@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Profile</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1><%= username %>'s Profile</h1>
+
+  <!-- Display Profile Picture -->
+  <% if (profile.photo) { %>
+    <img src="/uploads/profiles/<%= profile.photo %>" alt="Profile Picture" style="max-width: 150px; border-radius: 50%; margin-bottom: 1em;">
+  <% } else { %>
+    <img src="/uploads/profiles/default.jpg" alt="Default Profile Picture" style="max-width: 150px; border-radius: 50%; margin-bottom: 1em;">
+  <% } %>
+
+  <!-- Form to Update Profile -->
+  <form action="/profile" method="POST" enctype="multipart/form-data">
+    <label for="username">Username:</label><br>
+    <input type="text" name="username" id="username" value="<%= username %>" required /><br><br>
+
+    <label for="bio">Bio:</label><br>
+    <textarea name="bio" id="bio" rows="4" placeholder="Write something about yourself..."><%= profile.bio || '' %></textarea><br><br>
+
+    <!-- Upload Profile Picture -->
+    <label for="photo">Upload Profile Picture:</label><br>
+    <input type="file" name="photo" id="photo" accept="image/*" /><br><br>
+
+    <button type="submit">Save Profile</button>
+  </form>
+
+  <br>
+  <a href="/blog/dashboard">← Back to Dashboard</a>
+</body>
+</html>

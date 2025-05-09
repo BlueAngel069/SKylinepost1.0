@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Friend Requests</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>Pending Friend Requests</h1>
+
+  <% if (requests.length === 0) { %>
+    <p>You have no pending requests.</p>
+  <% } else { %>
+    <ul>
+      <% requests.forEach(req => { %>
+        <li>
+          <strong><%= req.requester %></strong>
+          <form action="/friends/accept/<%= req.requester %>" method="POST" style="display:inline;">
+            <button type="submit">Accept</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <br>
+  <a href="/blog/dashboard">← Back to Dashboard</a>
+</body>
+</html>

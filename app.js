@@ -12,38 +12,36 @@ const rateLimit = require('express-rate-limit');
 dotenv.config();
 const app = express();
 
-// ✅ Add these right after app is initialized
-app.set('trust proxy', 1);        // Render uses proxies, this prevents rate-limit crash
-app.set('view engine', 'ejs');    // Enables res.render() to load .ejs views
-app.set('views', path.join(__dirname, 'views')); // ✅ Explicitly set views folder
+// ✅ Proxy trust for Render + EJS view setup
+app.set('trust proxy', 1);
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-// ✅ Rate limiter for all requests
+// ✅ Global rate limit
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false
 });
 app.use(globalLimiter);
 
-// ✅ Rate limiter for login
+// ✅ Login-specific limiter
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: 'Too many login attempts. Please try again later.'
 });
 
-// ✅ Helmet for secure HTTP headers
+// ✅ Helmet & XSS protection
 app.use(helmet());
-
-// ✅ Parse form data and sanitize input
 app.use(express.urlencoded({ extended: false }));
 app.use(xss());
 
-// ✅ Serve static files
+// ✅ Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Secure session using memory store (Render compatible)
+// ✅ Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'please_change_this',
   resave: false,
@@ -52,30 +50,26 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 1000 * 60 * 60 * 2 // 2 hours
+    maxAge: 1000 * 60 * 60 * 2
   }
 }));
 
-// ✅ Multer config for profile picture uploads
+// ✅ Multer for file uploads
 const upload = multer({
   dest: path.join(__dirname, 'public/uploads/profiles'),
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed.'));
-    }
+    allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only images allowed.'));
   }
 });
 
-// ✅ Example profile update route
+// ✅ Profile upload route (adjust if needed)
 app.post('/profile', upload.single('photo'), (req, res) => {
   const { username, bio } = req.body;
   const profilePic = req.file ? req.file.filename : null;
 
-  db.run('UPDATE users SET profilePic = ?, bio = ? WHERE username = ?', [profilePic, bio, username], function (err) {
+  db.run('UPDATE users SET profilePic = ?, bio = ? WHERE username = ?', [profilePic, bio, username], (err) => {
     if (err) return res.send('Error updating profile.');
     res.redirect('/profile');
   });
@@ -84,16 +78,15 @@ app.post('/profile', upload.single('photo'), (req, res) => {
 // ✅ Apply login limiter
 app.use('/login', loginLimiter);
 
-// ✅ Load routes
+// ✅ Route mounting
 app.use('/', require('./routes/auth'));
 app.use('/blog', require('./routes/blog'));
 app.use('/profile', require('./routes/profile'));
 app.use('/friends', require('./routes/friends'));
 app.use('/chat', require('./routes/chat'));
 
-// ✅ Start the server
-const PORT = process.env.PORT;
+// ✅ Start server
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
-
